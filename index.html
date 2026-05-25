@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Markdown Org Reader</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><rect width='24' height='24' rx='6' fill='%236366f1'/><path d='M5 17V7h2l3 4 3-4h2v10h-2v-6l-3 4-3-4v6z' fill='white'/></svg>" />
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" />
+  <link rel="stylesheet" href="reader.css" />
+</head>
+<body>
+  <!-- Toolbar -->
+  <header class="toolbar">
+    <div class="brand">
+      <span class="logo"></span>
+      <span>MD&nbsp;Org&nbsp;Reader</span>
+      <span class="doc-name" id="doc-name"></span>
+    </div>
+
+    <div class="spacer"></div>
+
+    <div class="search">
+      <svg class="ic" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      <input id="search" type="search" placeholder="Search sections  /" autocomplete="off" />
+    </div>
+
+    <div class="group optional">
+      <button class="btn" id="btn-expand" title="Expand all (e)">Expand</button>
+      <button class="btn" id="btn-collapse" title="Collapse all (c)">Collapse</button>
+    </div>
+
+    <div class="group">
+      <button class="btn icon" id="btn-zoom-out" title="Zoom out (-)" aria-label="Zoom out"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/></svg></button>
+      <button class="btn icon" id="btn-fit" title="Fit to screen (f)" aria-label="Fit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
+      <button class="btn icon" id="btn-zoom-in" title="Zoom in (+)" aria-label="Zoom in"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg></button>
+    </div>
+
+    <div class="group optional">
+      <select class="btn" id="layout" title="Layout direction">
+        <option value="top">Top-down</option>
+        <option value="left">Left-right</option>
+        <option value="bottom">Bottom-up</option>
+        <option value="right">Right-left</option>
+      </select>
+      <button class="btn icon" id="btn-compact" title="Compact layout" aria-label="Compact"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+      <button class="btn icon" id="btn-theme" title="Toggle dark mode" aria-label="Theme"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z"/></svg></button>
+      <button class="btn icon" id="btn-export" title="Export PNG" aria-label="Export"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14"/></svg></button>
+    </div>
+
+    <button class="btn primary" id="btn-open" title="Open .md file (o)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 19h14a2 2 0 002-2V8a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2v11a2 2 0 002 2z"/></svg>
+      Open
+    </button>
+    <input id="file-input" type="file" accept=".md,.markdown,.txt,text/markdown,text/plain" hidden />
+  </header>
+
+  <!-- Stage -->
+  <main id="stage">
+    <div id="chart"></div>
+    <div id="empty">
+      <div class="big">Render a Markdown file as a living outline</div>
+      <div class="sub">Drop a <code>.md</code> file anywhere, press <kbd>o</kbd> to open one, or
+        <a href="#" id="btn-sample">view the sample</a>. Every heading becomes a scrollable card.</div>
+    </div>
+  </main>
+
+  <!-- Drag overlay -->
+  <div id="drop-overlay"><div class="ring">Drop your .md file to render</div></div>
+
+  <!-- Hidden measurer: identical structure/width to a live card so wrapping
+       (and therefore measured height) matches exactly. -->
+  <div id="measure-host">
+    <div class="md-node depth-1">
+      <div class="node-header" id="measure-header"></div>
+      <div class="node-body" id="measure-body"></div>
+    </div>
+  </div>
+
+  <!-- Libraries -->
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/d3-flextree@2.1.2/build/d3-flextree.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/d3-org-chart@3.1.1"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.11/dist/purify.min.js"></script>
+  <script src="reader.js"></script>
+</body>
+</html>

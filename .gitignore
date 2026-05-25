@@ -1,0 +1,7 @@
+# OMC orchestration state (local tooling)
+.omc/
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+*.swp
