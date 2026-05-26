@@ -18,6 +18,11 @@
   let curLayout = "top";
   let isCompact = false;
   let loadCount = 0;        // namespaces node ids per load (avoids cross-load id collisions)
+  let currentMode = "mindmap"; // "mindmap" (org-chart) | "reader" (one whole document)
+  let currentMd = "";       // raw markdown of the loaded doc (source for reader mode)
+  let currentTitle = "";    // doc title (filename without extension)
+  let parsedList = null;    // cached heading tree for the current doc
+  let chartBuilt = false;   // org-chart is built lazily the first time mindmap mode shows
 
   // ---- marked config ----------------------------------------------------
   marked.setOptions({ gfm: true, breaks: false, headerIds: false, mangle: false });
@@ -282,6 +287,7 @@
   }
 
   function search(q) {
+    if (currentMode === "reader") return searchDocument(q);
     q = (q || "").trim().toLowerCase();
     safe(() => chart.clearHighlighting());
     document.querySelectorAll(".md-node.matched").forEach((el) => el.classList.remove("matched"));
@@ -301,14 +307,73 @@
     });
   }
 
+  // Reader-mode search: scroll to and flash the first block containing q.
+  function searchDocument(q) {
+    const host = $("#doc-content");
+    if (!host) return;
+    host.querySelectorAll(".doc-flash").forEach((el) => el.classList.remove("doc-flash"));
+    q = (q || "").trim().toLowerCase();
+    if (!q) return;
+    const blocks = host.querySelectorAll("h1,h2,h3,h4,h5,h6,p,li,td,th,blockquote,pre");
+    let hit = null;
+    for (const el of blocks) {
+      if ((el.textContent || "").toLowerCase().includes(q)) { hit = el; break; }
+    }
+    if (!hit) { toast("No match"); return; }
+    hit.scrollIntoView({ behavior: "smooth", block: "center" });
+    hit.classList.add("doc-flash");
+  }
+
   // ---- file loading -----------------------------------------------------
   function loadText(text, name) {
-    const title = (name || "Document").replace(/\.(md|markdown|txt)$/i, "");
-    const list = parseMarkdown(text, title);
+    currentMd = text;
+    currentTitle = (name || "Document").replace(/\.(md|markdown|txt)$/i, "");
+    parsedList = parseMarkdown(text, currentTitle);
+    chartBuilt = false;
     $("#empty").style.display = "none";
     $("#doc-name").textContent = name || "Document";
-    renderChart(list);
-    toast(`Loaded · ${list.length} section${list.length === 1 ? "" : "s"}`);
+    renderActiveView();
+    toast(`Loaded · ${parsedList.length} section${parsedList.length === 1 ? "" : "s"}`);
+  }
+
+  // Render whichever view is active. The org-chart is built lazily — and only
+  // while its container is visible — so d3's fit() always sees real dimensions.
+  function renderActiveView() {
+    if (currentMode === "reader") {
+      renderDocument();
+    } else if (!chartBuilt && parsedList) {
+      renderChart(parsedList);
+      chartBuilt = true;
+    }
+  }
+
+  // Reader mode: render the entire file as one continuously-scrolling document.
+  function renderDocument() {
+    const host = $("#doc-content");
+    if (!host) return;
+    host.innerHTML = (currentMd && currentMd.trim())
+      ? wrapTables(sanitize(marked.parse(currentMd)))
+      : '<p class="doc-empty">This document is empty.</p>';
+    const scroller = $("#document");
+    if (scroller) scroller.scrollTop = 0;
+  }
+
+  // Switch between mindmap (org-chart) and reader (full document) views.
+  function setMode(mode) {
+    if (mode !== "reader" && mode !== "mindmap") return;
+    currentMode = mode;
+    document.body.classList.toggle("mode-reader", mode === "reader");
+    document.body.classList.toggle("mode-mindmap", mode === "mindmap");
+    updateModeButtons();
+    try { localStorage.setItem("mdreader.mode", mode); } catch (_) {}
+    renderActiveView();
+    // Re-fit once the chart's container is visible again.
+    if (mode === "mindmap" && chartBuilt) safe(() => chart.fit());
+  }
+
+  function updateModeButtons() {
+    document.querySelectorAll("#mode-toggle .seg-btn").forEach((b) =>
+      b.classList.toggle("active", b.dataset.mode === currentMode));
   }
 
   function loadFile(file) {
@@ -348,6 +413,9 @@
       $("#btn-theme").classList.toggle("active", document.body.classList.contains("dark"));
     });
 
+    document.querySelectorAll("#mode-toggle .seg-btn").forEach((b) =>
+      b.addEventListener("click", () => setMode(b.dataset.mode)));
+
     const searchInput = $("#search");
     searchInput.addEventListener("keydown", (e) => { if (e.key === "Enter") search(searchInput.value); });
     searchInput.addEventListener("input", (e) => { if (!e.target.value) search(""); });
@@ -362,6 +430,7 @@
       else if (e.key === "/") { e.preventDefault(); searchInput.focus(); }
       else if (e.key === "+" || e.key === "=") { zoomIn(); }
       else if (e.key === "-") { zoomOut(); }
+      else if (e.key === "v") { setMode(currentMode === "reader" ? "mindmap" : "reader"); }
     });
 
     // node resizing (delegated; survives chart re-renders)
@@ -378,6 +447,14 @@
       const f = e.dataTransfer.files && e.dataTransfer.files[0];
       if (f) loadFile(f);
     });
+
+    // restore the last-used view mode (default: mindmap) before first render
+    try {
+      const saved = localStorage.getItem("mdreader.mode");
+      if (saved === "reader" || saved === "mindmap") currentMode = saved;
+    } catch (_) {}
+    document.body.classList.add(currentMode === "reader" ? "mode-reader" : "mode-mindmap");
+    updateModeButtons();
 
     // load the welcome doc so the canvas is never empty
     loadText(SAMPLE_MD, "Welcome.md");
@@ -410,10 +487,11 @@
     "```",
     "",
     "## Controls",
-    "- **Expand / Collapse all**, **Fit**, **zoom** buttons in the toolbar",
-    "- **Search** (`/`) centers and highlights the first matching section",
+    "- **Mindmap ↔ Reader** toggle (top toolbar): *Mindmap* shows the outline as cards; *Reader* shows the whole file as one scrollable document.",
+    "- **Expand / Collapse all**, **Fit**, **zoom** buttons in the toolbar (mindmap mode)",
+    "- **Search** (`/`) centers the first matching section — in Reader mode it scrolls to the first match",
     "- **Layout** switch (top-down ↔ left-right), **Compact** toggle, **dark mode**",
-    "- Shortcuts: `o` open · `f` fit · `e` expand · `c` collapse · `+` / `-` zoom",
+    "- Shortcuts: `o` open · `v` toggle view · `f` fit · `e` expand · `c` collapse · `+` / `-` zoom",
     "",
     "### Try it now",
     "Open your own **`FINDINGS.md`** to see a real, deeply-nested document render instantly.",

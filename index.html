@@ -19,23 +19,34 @@
 
     <div class="spacer"></div>
 
+    <div class="segmented" id="mode-toggle" role="tablist" aria-label="View mode">
+      <button class="seg-btn active" id="mode-mindmap" data-mode="mindmap" role="tab" title="Mindmap view — outline as cards">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="3" width="6" height="5" rx="1"/><rect x="3" y="16" width="6" height="5" rx="1"/><rect x="15" y="16" width="6" height="5" rx="1"/><path d="M12 8v3M6 16v-2h12v2"/></svg>
+        <span>Mindmap</span>
+      </button>
+      <button class="seg-btn" id="mode-reader" data-mode="reader" role="tab" title="Reader view — the whole file as one document (v)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16M4 9h16M4 13h12M4 17h16"/></svg>
+        <span>Reader</span>
+      </button>
+    </div>
+
     <div class="search">
       <svg class="ic" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
       <input id="search" type="search" placeholder="Search sections  /" autocomplete="off" />
     </div>
 
-    <div class="group optional">
+    <div class="group optional mindmap-only">
       <button class="btn" id="btn-expand" title="Expand all (e)">Expand</button>
       <button class="btn" id="btn-collapse" title="Collapse all (c)">Collapse</button>
     </div>
 
-    <div class="group">
+    <div class="group mindmap-only">
       <button class="btn icon" id="btn-zoom-out" title="Zoom out (-)" aria-label="Zoom out"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/></svg></button>
       <button class="btn icon" id="btn-fit" title="Fit to screen (f)" aria-label="Fit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
       <button class="btn icon" id="btn-zoom-in" title="Zoom in (+)" aria-label="Zoom in"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg></button>
     </div>
 
-    <div class="group optional">
+    <div class="group optional mindmap-only">
       <select class="btn" id="layout" title="Layout direction">
         <option value="top">Top-down</option>
         <option value="left">Left-right</option>
@@ -43,8 +54,11 @@
         <option value="right">Right-left</option>
       </select>
       <button class="btn icon" id="btn-compact" title="Compact layout" aria-label="Compact"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
-      <button class="btn icon" id="btn-theme" title="Toggle dark mode" aria-label="Theme"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z"/></svg></button>
       <button class="btn icon" id="btn-export" title="Export PNG" aria-label="Export"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14"/></svg></button>
+    </div>
+
+    <div class="group">
+      <button class="btn icon" id="btn-theme" title="Toggle dark mode" aria-label="Theme"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z"/></svg></button>
     </div>
 
     <button class="btn primary" id="btn-open" title="Open .md file (o)">
@@ -57,6 +71,7 @@
   <!-- Stage -->
   <main id="stage">
     <div id="chart"></div>
+    <div id="document"><article class="doc-content" id="doc-content"></article></div>
     <div id="empty">
       <div class="big">Render a Markdown file as a living outline</div>
       <div class="sub">Drop a <code>.md</code> file anywhere, press <kbd>o</kbd> to open one, or
