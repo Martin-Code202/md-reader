@@ -383,6 +383,31 @@
     reader.readAsText(file);
   }
 
+  // ---- paste-markdown modal --------------------------------------------
+  function openPasteModal() {
+    const m = $("#paste-modal");
+    if (!m) return;
+    m.classList.add("show");
+    const nameEl = $("#paste-name");
+    if (nameEl && !nameEl.value) nameEl.value = "Pasted.md";
+    // focus the textarea so Ctrl+V works immediately
+    setTimeout(() => { const t = $("#paste-text"); if (t) t.focus(); }, 0);
+  }
+
+  function closePasteModal() {
+    const m = $("#paste-modal");
+    if (m) m.classList.remove("show");
+  }
+
+  function loadPasted() {
+    const text = ($("#paste-text") && $("#paste-text").value) || "";
+    if (!text.trim()) { toast("Nothing to load"); return; }
+    let name = (($("#paste-name") && $("#paste-name").value) || "").trim() || "Pasted.md";
+    if (!/\.(md|markdown|txt)$/i.test(name)) name += ".md";
+    closePasteModal();
+    loadText(text, name);
+  }
+
   // ---- toast ------------------------------------------------------------
   let toastTimer = null;
   function toast(msg) {
@@ -416,14 +441,34 @@
     document.querySelectorAll("#mode-toggle .seg-btn").forEach((b) =>
       b.addEventListener("click", () => setMode(b.dataset.mode)));
 
+    // paste-markdown modal wiring
+    $("#btn-paste").addEventListener("click", openPasteModal);
+    $("#paste-close").addEventListener("click", closePasteModal);
+    $("#paste-cancel").addEventListener("click", closePasteModal);
+    $("#paste-load").addEventListener("click", loadPasted);
+    $("#paste-modal").addEventListener("click", (e) => {
+      // click outside the card dismisses
+      if (e.target === $("#paste-modal")) closePasteModal();
+    });
+    $("#paste-text").addEventListener("keydown", (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "Enter") { e.preventDefault(); loadPasted(); }
+    });
+
     const searchInput = $("#search");
     searchInput.addEventListener("keydown", (e) => { if (e.key === "Enter") search(searchInput.value); });
     searchInput.addEventListener("input", (e) => { if (!e.target.value) search(""); });
 
     // keyboard shortcuts
     document.addEventListener("keydown", (e) => {
-      if (e.target.tagName === "INPUT" || e.target.tagName === "SELECT") return;
+      // Escape always closes the paste modal (even when focus is in the textarea).
+      if (e.key === "Escape" && $("#paste-modal").classList.contains("show")) {
+        e.preventDefault(); closePasteModal(); return;
+      }
+      // Suppress single-key shortcuts while typing in a field or while the modal is open.
+      if (e.target.tagName === "INPUT" || e.target.tagName === "SELECT" || e.target.tagName === "TEXTAREA") return;
+      if ($("#paste-modal").classList.contains("show")) return;
       if (e.key === "o") { e.preventDefault(); $("#file-input").click(); }
+      else if (e.key === "p") { e.preventDefault(); openPasteModal(); }
       else if (e.key === "f") { e.preventDefault(); fit(); }
       else if (e.key === "e") { expandAll(); }
       else if (e.key === "c") { collapseAll(); }
@@ -491,7 +536,7 @@
     "- **Expand / Collapse all**, **Fit**, **zoom** buttons in the toolbar (mindmap mode)",
     "- **Search** (`/`) centers the first matching section — in Reader mode it scrolls to the first match",
     "- **Layout** switch (top-down ↔ left-right), **Compact** toggle, **dark mode**",
-    "- Shortcuts: `o` open · `v` toggle view · `f` fit · `e` expand · `c` collapse · `+` / `-` zoom",
+    "- Shortcuts: `o` open · `p` paste · `v` toggle view · `f` fit · `e` expand · `c` collapse · `+` / `-` zoom",
     "",
     "### Try it now",
     "Open your own **`FINDINGS.md`** to see a real, deeply-nested document render instantly.",

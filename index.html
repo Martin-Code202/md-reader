@@ -61,6 +61,10 @@
       <button class="btn icon" id="btn-theme" title="Toggle dark mode" aria-label="Theme"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z"/></svg></button>
     </div>
 
+    <button class="btn" id="btn-paste" title="Paste markdown (p)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="8" y="3" width="8" height="4" rx="1"/><path d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V7a2 2 0 00-2-2h-2"/></svg>
+      Paste
+    </button>
     <button class="btn primary" id="btn-open" title="Open .md file (o)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 19h14a2 2 0 002-2V8a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2v11a2 2 0 002 2z"/></svg>
       Open
@@ -74,7 +78,7 @@
     <div id="document"><article class="doc-content" id="doc-content"></article></div>
     <div id="empty">
       <div class="big">Render a Markdown file as a living outline</div>
-      <div class="sub">Drop a <code>.md</code> file anywhere, press <kbd>o</kbd> to open one, or
+      <div class="sub">Drop a <code>.md</code> file anywhere, press <kbd>o</kbd> to open one, <kbd>p</kbd> to paste markdown, or
         <a href="#" id="btn-sample">view the sample</a>. Every heading becomes a scrollable card.</div>
     </div>
   </main>
@@ -88,6 +92,35 @@
     <div class="md-node depth-1">
       <div class="node-header" id="measure-header"></div>
       <div class="node-body" id="measure-body"></div>
+    </div>
+  </div>
+
+  <!-- Paste-markdown modal -->
+  <div id="paste-modal" class="modal" role="dialog" aria-labelledby="paste-title" aria-modal="true">
+    <div class="modal-card">
+      <header class="modal-head">
+        <h2 id="paste-title">Paste markdown</h2>
+        <button class="btn icon" id="paste-close" title="Close (Esc)" aria-label="Close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </header>
+      <div class="modal-body">
+        <label class="field">
+          <span class="field-label">Document name</span>
+          <input id="paste-name" type="text" placeholder="Pasted.md" autocomplete="off" spellcheck="false" />
+        </label>
+        <label class="field grow">
+          <span class="field-label">Markdown</span>
+          <textarea id="paste-text" placeholder="# Title&#10;&#10;Paste or type your markdown here…" spellcheck="false"></textarea>
+        </label>
+      </div>
+      <footer class="modal-foot">
+        <span class="modal-hint">Tip: <kbd>Ctrl</kbd>+<kbd>Enter</kbd> to load · <kbd>Esc</kbd> to close</span>
+        <div class="modal-actions">
+          <button class="btn" id="paste-cancel">Cancel</button>
+          <button class="btn primary" id="paste-load">Load</button>
+        </div>
+      </footer>
     </div>
   </div>
 
